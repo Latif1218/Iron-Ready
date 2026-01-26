@@ -1,0 +1,24 @@
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+SQLALCHEMY_DATABASE_URL = os.getenv("SQLALCHEMY_DATABASE_URL")
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+
+
+EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", 587))
+EMAIL_USER = os.getenv("EMAIL_USER")
+EMAIL_FROM = os.getenv("EMAIL_FROM")
+EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True").lower() in ("true", "1", "yes")
+
+
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
+GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI")
+GOOGLE_AUTH_URL = os.getenv("GOOGLE_AUTH_URL")
+GOOGLE_TOKEN_URL = os.getenv("GOOGLE_TOKEN_URL")
+GOOGLE_USERINFO_URL = os.getenv("GOOGLE_USERINFO_URL")
+
