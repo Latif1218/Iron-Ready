@@ -30,3 +30,6 @@ class User(Base):
     
     subscription = relationship("Subscription", back_populates="user", uselist=False)
     workout_plans = relationship("WorkoutPlan", back_populates="user")
+    sessions = relationship("Session", back_populates="user")
+    recoveries = relationship("Recovery", back_populates="user")
+    notifications = relationship("Notification", back_populates="user", order_by="Notification.created_at.desc()")

@@ -18,3 +18,4 @@ class WorkoutPlan(Base):
     generated_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="workout_plans")
+    sessions = relationship("Session", back_populates="workout")
