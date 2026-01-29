@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from ..schemas import user_schema
 from ..database import get_db
-from ..models import user_model
 from ..authentication import user_auth
 from ..utils import age_cal
 from datetime import datetime

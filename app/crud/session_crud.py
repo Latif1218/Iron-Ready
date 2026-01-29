@@ -1,4 +1,3 @@
-# crud/session_crud.py
 from sqlalchemy.orm import Session
 from datetime import datetime
 from ..models.session_model import Session, SetLog

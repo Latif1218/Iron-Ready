@@ -1,4 +1,3 @@
-# models/session_model.py
 from sqlalchemy import Column, Integer, ForeignKey, DateTime, Boolean, String, Float
 from sqlalchemy.orm import relationship
 from ..database import Base

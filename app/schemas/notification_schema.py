@@ -1,4 +1,3 @@
-# schemas/notification_schema.py
 from pydantic import BaseModel
 from datetime import datetime
 

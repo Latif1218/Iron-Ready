@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.orm import Session
-from typing import Annotated, List
-
+from typing import List
 from app.crud.notification_crud import create_notification
 from app.models.workout_model import WorkoutPlan
 from app.schemas.notification_schema import NotificationCreate

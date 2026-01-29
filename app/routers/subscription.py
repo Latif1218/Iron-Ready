@@ -1,9 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import Annotated
 from ..database import get_db
 from ..authentication.user_auth import get_current_user
-from ..models.user_model import User
 from ..models.subs_model import Subscription, SubscriptionStatus
 from ..schemas.subs_schema import CreateSubscriptionRequest, SubscriptionResponse
 import stripe
