@@ -1,19 +1,26 @@
-from sqlalchemy.orm import Session
-from typing import List
-from datetime import datetime
 import json
-from openai import OpenAI
-import os
-
+import logging
+from datetime import datetime
+from typing import List
+from sqlalchemy.orm import Session
+from langchain_community.vectorstores import Chroma
+from langchain_huggingface import HuggingFaceEmbeddings
 from ..models.user_model import User
 from ..models.workout_model import WorkoutPlan
 from ..schemas.workout_schema import WorkoutPlanOut
 from ..utils.prompts import WORKOUT_GENERATION_PROMPT
+from ..config import groq_client
 
-groq_client = OpenAI(
-    api_key=os.getenv("GROQ_API_KEY"),
-    base_url="https://api.groq.com/openai/v1",
+logger = logging.getLogger(__name__)
+
+
+embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+vectorstore = Chroma(
+    collection_name="iron_ready_exercises",
+    embedding_function=embeddings,
+    persist_directory="./chroma_db_exercise"  
 )
+retriever = vectorstore.as_retriever(search_kwargs={"k": 10})
 
 
 def generate_workout_plan_service(
@@ -21,13 +28,15 @@ def generate_workout_plan_service(
     db: Session
 ) -> List[WorkoutPlanOut]:
     """
-    Core function to generate and save workout plan using Groq API.
-    Returns list of created WorkoutPlanOut objects.
+    Generate personalized workout plan using:
+    - User registration/onboarding data
+    - Relevant exercises retrieved from Excel via RAG (Chroma DB)
+    
+    Returns: List of created WorkoutPlanOut objects
     """
     if not current_user.is_onboarded:
         raise ValueError("User must complete onboarding first.")
-
-   
+    
     age = current_user.age or 25
     gender = current_user.gender or "not specified"
     height_cm = current_user.height or 170.0
@@ -36,7 +45,12 @@ def generate_workout_plan_service(
     training_days = current_user.training_days or ["Monday", "Wednesday", "Friday"]
     strength_levels = current_user.strength_levels or {}
 
-   
+    query = f"Exercises for {sport} sport, training days {', '.join(training_days)}, patterns: press, hinge, squat, pull, jump, rotate, carry"
+    docs = retriever.invoke(query)  
+
+    context = "\n\n".join([doc.page_content for doc in docs])
+    logger.info(f"Retrieved {len(docs)} relevant exercises for user {current_user.id}")
+
     formatted_prompt = WORKOUT_GENERATION_PROMPT.format(
         age=age,
         gender=gender,
@@ -44,32 +58,46 @@ def generate_workout_plan_service(
         weight_kg=weight_kg,
         sport=sport,
         training_days=", ".join(training_days),
-        strength_levels_json=json.dumps(strength_levels, ensure_ascii=False)
+        strength_levels_json=json.dumps(strength_levels, ensure_ascii=False),
+        context=context  
     )
 
+  
     try:
         response = groq_client.chat.completions.create(
             model="llama-3.1-8b-instant",
             messages=[
-                {"role": "system", "content": "You are an expert fitness coach. Output ONLY valid JSON. No extra text."},
+                {"role": "system", "content": "Output ONLY valid JSON. No extra text or explanations."},
                 {"role": "user", "content": formatted_prompt}
             ],
             temperature=0.35,
-            max_tokens=2500,
+            max_tokens=3000,
             response_format={"type": "json_object"}
         )
 
         raw_output = response.choices[0].message.content.strip()
+        logger.debug(f"Groq raw output: {raw_output[:200]}...")
 
         plan_data = json.loads(raw_output)
         week_plan = plan_data.get("week_plan", [])
 
         if not week_plan or not isinstance(week_plan, list):
-            raise ValueError("No valid week_plan in Groq response")
+            raise ValueError("Invalid or empty 'week_plan' in Groq response")
 
-        created_plans = []
+    except json.JSONDecodeError as parse_err:
+        logger.error(f"JSON parse failed: {str(parse_err)} - Raw: {raw_output}")
+        raise ValueError(f"Failed to parse generated plan: {str(parse_err)}")
+    except Exception as api_err:
+        logger.error(f"Groq API error: {str(api_err)}")
+        raise RuntimeError(f"Groq generation failed: {str(api_err)}")
+
+  
+    created_plans = []
+    try:
         for day_plan in week_plan:
-            if not {"day", "muscle_group", "duration_minutes", "exercises"}.issubset(day_plan.keys()):
+            required = {"day", "muscle_group", "duration", "exercises"}
+            if not required.issubset(day_plan.keys()):
+                logger.warning(f"Skipping invalid day plan: {day_plan.get('day', 'unknown')}")
                 continue
 
             db_plan = WorkoutPlan(
@@ -77,7 +105,7 @@ def generate_workout_plan_service(
                 week=1,
                 day=day_plan["day"],
                 muscle_group=day_plan["muscle_group"],
-                duration=day_plan["duration_minutes"],
+                duration=day_plan.get("duration", 45), 
                 exercises=day_plan["exercises"],
                 warm_up=day_plan.get("warm_up", ""),
                 cool_down=day_plan.get("cool_down", ""),
@@ -90,12 +118,11 @@ def generate_workout_plan_service(
         for plan in created_plans:
             db.refresh(plan)
 
+        logger.info(f"Generated & saved {len(created_plans)} workout plans for user {current_user.id}")
+
         return [WorkoutPlanOut.from_orm(p) for p in created_plans]
 
-    except json.JSONDecodeError as parse_err:
-        raise ValueError(f"Failed to parse Groq response: {str(parse_err)}")
-    except Exception as e:
+    except Exception as db_err:
         db.rollback()
-        raise RuntimeError(f"Groq API or processing error: {str(e)}")
-    
-    
+        logger.error(f"Database save failed: {str(db_err)}")
+        raise RuntimeError(f"Failed to save workout plans: {str(db_err)}")

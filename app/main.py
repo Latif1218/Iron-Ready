@@ -1,6 +1,6 @@
 from fastapi import FastAPI, status, HTTPException
 from .database import Base, engine
-from .routers import register_user, user, onboarding, subscription, workout_plan
+from .routers import register_user, user, onboarding, subscription, workout_plan, recoveries, notificatiions
 from fastapi import Request
 import stripe
 from .config import *
@@ -44,3 +44,5 @@ app.include_router(user.router)
 app.include_router(onboarding.router)
 app.include_router(subscription.router)
 app.include_router(workout_plan.router)
+app.include_router(recoveries.router)
+app.include_router(notificatiions.router)

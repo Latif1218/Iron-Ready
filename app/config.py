@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from openai import OpenAI
 
 load_dotenv()
 
@@ -30,3 +31,12 @@ STRIPE_WEBHOOK_SECRET=os.getenv("STRIPE_WEBHOOK_SECRET")
 
 
 GROQ_API_KEY=os.getenv("GROQ_API_KEY")
+HF_TOKEN=os.getenv("HF_TOKEN")
+
+EXCEL_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "exercises.csv")
+
+
+groq_client = OpenAI(
+    api_key=os.getenv("GROQ_API_KEY"),
+    base_url="https://api.groq.com/openai/v1",
+)

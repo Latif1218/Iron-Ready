@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from ..models.recovery_model import Recovery
 from datetime import datetime
+from typing import List
 
 
 def update_recovery(
@@ -32,3 +33,9 @@ def update_recovery(
     db.commit()
     db.refresh(recovery)
     return recovery
+
+
+
+
+def get_user_recoveries(db: Session, user_id: int) -> List[Recovery]:
+    return db.query(Recovery).filter(Recovery.user_id == user_id).all()

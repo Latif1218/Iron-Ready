@@ -27,19 +27,29 @@ router = APIRouter(
     response_model=List[WorkoutPlanOut]
 )
 def generate_workout_plan(
-    request: WorkoutGenerateRequest,  
     current_user:Session = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    """
+    - Requires user to be onboarded.
+    - Uses Groq API + RAG (Chroma DB with exercises.xlsx).
+    - Body not required (empty {} acceptable).
+    """
     try:
-        plans = generate_workout_plan_service(current_user, db)
-        return plans
+        created_plans = generate_workout_plan_service(current_user, db)
+        return created_plans
+
     except ValueError as ve:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unexpected error: {str(ve)}")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(ve))
+
     except RuntimeError as re:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Unexpected error: {str(re)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(re))
+
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Unexpected error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Unexpected error during plan generation: {str(e)}"
+        )
     
     
     

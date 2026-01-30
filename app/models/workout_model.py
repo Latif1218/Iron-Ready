@@ -13,6 +13,7 @@ class WorkoutPlan(Base):
     muscle_group = Column(String, nullable=False)
     duration = Column(Integer, nullable=False)  
     exercises = Column(JSON, nullable=False)    
+    status = Column(String, nullable=False)
     warm_up = Column(String, nullable=True)
     cool_down = Column(String, nullable=True)
     generated_at = Column(DateTime, default=datetime.utcnow)

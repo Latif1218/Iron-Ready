@@ -1,0 +1,40 @@
+name,sport_category,movement_pattern,primary_muscles,secondary_muscles,cns_load,skill_level,injury_risk,equipment,description
+Bench Press,both,press,"""{chest}""","""{front_delts,triceps}""",medium,medium ,medium,"""{barbell,bench}""",press motion for upper body strength and explosive power
+Hang Cleans ,football ,hinge,"""{glutes}""","""{lower_back,hamstrings}""",medium,high,medium ,"""{barbell}""",advanced lift for explosive power and driving through defender 
+Neck Bridges ,combat,neck,"""{neck}""","""{traps}""",medium,high ,high ,"""{bodyweight}""",advanced neck strengthening for flexibility and injury prevention 
+Push-Ups ,both ,press,"""{chest}""","""{front_delts,triceps}""",low,low,low,"""{bodyweight}""",basic press motion for muscular endurance and core stability 
+Bulgarian Split Squats ,football,squat ,"""{quads}""","""{glutes,hamstrings}""",low,medium ,medium ,"""{dumbbells,bodyweight}""","single leg squat great for acceleration, powerful strides and change of direction"
+Standing Landmine Press,combat ,press,"""{shoulders}""","""{obliques,chest}""",medium ,medium ,medium ,"""{barbell}""",press movement with barbell excellent for explosive punching and hip movement 
+Deadlifts ,both ,pull,"""{lower_back}""","""{glutes,hamstrings}""",high ,medium ,medium,"""{barbell}""",from the ground pulling movement for hip drive and posterior strength 
+Trap Bar Jumps ,football,jump,"""{quads}""","""{glutes,calves}""",medium ,medium ,high ,"""{trap_bar}""",trap bar deadlift to a explosive jump for first step quickness and increasing vertical
+Farmer's Carry,combat ,carry,"""{forearms,glutes}""","""{traps,quads}""",low,low,low,"""{dumbbells,trap_bar}""",exercise walking with heavy weight for insane grip strength and muscular endurance
+Box Jumps ,both ,jump,"""{quads,hamstrings}""","""{hamstrings,glutes}""",low,medium ,low,"""{box,bodyweight}""",jumping motion for fast twitch muscles and leg power
+Single Arm Dumbbell Rows ,football,pull,"""{lats}""","""{traps, rear_delts}""",medium ,medium ,low,"""{dumbbells}""",single arm row great for maintaining leverage and strong upper back
+Burpees ,combat ,jump,"""{core,shoulders}""","""{quads,glutes}""",low,low,low,"""{bodyweight}""",used for full body explosiveness and endurance transferring to better takedowns 
+Pull-Ups,both ,pull,"""{lats,biceps}""","""{traps,forearms}""",low,low,low,"""{bar,bodyweight}""",bodyweight pronated grip pull-up for pulling strength and grip endurance 
+Kettlebell Swings ,football,hinge,"""{glutes,hamstrings}""","""{core,lower_back}""",low,low ,low ,"""{kettlebell}""",hip movement exercise great for tackling and explosive hips
+Floor Press,combat ,press,"""{chest}""","""{shoulders,triceps}""",medium ,medium ,medium ,"""{barbell,dumbbells}""",press from floor great for ground-based pressing power to push opponents off
+Front Squats ,both ,squat ,"""{glutes,hamstrings}""","""{quads,hips}""",medium ,medium ,low ,"""{barbell}""",squat with barbell in front for explosive leg power and core strength 
+Strict Press,football,Press,"""{shoulders}""","""{triceps,traps}""",high ,low ,medium ,"""{barbell}""",over the head barbell shoulder press for stronger arms and shoulder durability 
+Zercher Squats ,combat ,squat,"""{quads,hamstrings}""","""{core,shoulders}""",high ,medium ,medium ,"""{barbell}""","squat with barbell at elbows great for grappling,full body strength and takedowns"
+Medicine Ball Slams ,both ,rotate ,"""{core,shoulder}""","""{lats}""",medium ,low ,low ,"""{medicine_ball}""",overhead rotating medicine ball slams for core strength and rotational power 
+Tempo Incline Dumbbell Press,football,press,"""{upper_chest}""","""{front_delts,triceps}""",medium ,low ,low ,"""{dumbbells}""",slow controlled downwards movement with fast upwards press great for explosive blocking and power
+Hip Thrust,combat ,hinge ,"""{glutes,hamstrings}""","""{quads,core}""",medium ,low ,medium ,"""{barbell}""",upwards thrust with barbell at hips for takedown defense and explosive hip power 
+Isometric Pistol Squat,both ,squat ,"""{quads,glutes}""","""{core,hamstrings}""",low,high ,medium ,"""{bodyweight, dumbbell}""",single leg squat onto bench great for unilateral leg strength that builds an explosive drive from low positions 
+Goblet Squats ,football ,squat,"""{quads,hamstrings}""","""{core,glutes}""",medium ,low ,low ,"""{dumbbell}""",squat with dumbbells at chest height for acceleration off the line and change of direction 
+Arnold Press,combat ,press,"""{shoulders}""","""{biceps}""",medium ,medium ,low ,"""{dumbbell}""",start with dumbbell in curl position then overhead press for shoulder mobility and better clinch work
+Hammer Curls ,both ,pull,"""{brachialis}""","""{forearms}""",low,low ,low ,"""{dumbbell}""",basic neutral grip curl great for boosting grip strength and holding opponents
+Romanian Deadlift,football ,hinge ,"""{glutes,hamstrings}""","""{lower_back}""",high ,medium ,high ,"""{barbell}""",deadlift with knees locked in slight bend position for acceleration and deceleration 
+Walking Lunges ,combat ,squat ,"""{quads,glutes}""","""{hamstrings}""",low,low ,low ,"""{dumbbell,barbell}""",unilateral lunges great for movement and balance in match
+Dips,both ,press,"""{triceps,chest}""","""{shoulder,core}""",low,medium ,low ,"""{bar,bodyweight}""",unweighted or weighted lean forward as you lower yourself then push yourself up great for upper body explosiveness
+Single Leg Step Ups,football ,press,"""{quads,glutes}""","""{calves,hamstrings}""",medium,low ,low ,"""{bench,dumbbell}""","one leg on bench other down then explode other leg up great for drive, acceleration and cutting"
+Barbell Rows ,combat ,pull,"""{lats,rhomboid}""","""{rear_delts}""",low,medium ,medium ,"""{barbell}""",Bent over 45 degree barbell row great for takedown defense and clinches control
+Face Pulls,both ,pull,"""{rear_delts}""","""{traps,rhomboid}""",low,low ,low ,"""{cable}""",pull rope to eye level for pulling strength and posture 
+Broad Jumps ,football ,jump,"""{quads,hamstrings}""","""{glutes,calves}""",low,low ,low,"""{bodyweight}""",continuous forward broad jump great for powerful burst and acceleration 
+Plate Rotations,combat ,rotate ,"""{shoulders,obliques}""","""{upper_back}""",low,medium ,medium ,"""{plate}""",rotate plate around head great for shoulder endurance preventing injury and force in strikes 
+Chin-Ups,both ,pull,"""{lats,biceps}""","""{traps,rhomboid}""",low,low ,low ,"""{bodyweight}""",Supinated grip pull-ups great for overall back and grip strength 
+Half Kneeling Landmine Press,football ,press,"""{shoulders}""","""{obliques,chest}""",medium ,medium ,low ,"""{barbell}""",unilateral press movement from kneeling position great for shoulder health and explosive upper body strength
+Forearm Curls,combat ,pull,"""{forearms}""","""{brachialis}""",low,low ,low ,"""{dumbbell}""",Simple curl using only your wrist great for harder strikes and stronger hooks
+Depth Jumps ,both ,jump,"""{hamstrings,quads}""","""{calves}""",low,low ,medium ,"""{bodyweight}""",drop from elevated position then explode up great for fast force absorption and injury resilience
+High Pulls,football ,pull,"""{shoulders}""","""{hamstrings,quads}""",medium ,medium ,low ,"""{barbell,dumbbells}""",alternative clean variation great for full body explosive power and acceleration 
+Weighted Calf Raises,combat ,press,"""{calves}""","""{soleus}""",low,low ,low ,"""{dumbbell,barbell}""",Raise onto your toes with weights great for explosive movement and shock absorption 
