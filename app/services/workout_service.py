@@ -3,7 +3,7 @@ import logging
 from datetime import datetime
 from typing import List
 from sqlalchemy.orm import Session
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from ..models.user_model import User
 from ..models.workout_model import WorkoutPlan
@@ -109,6 +109,7 @@ def generate_workout_plan_service(
                 exercises=day_plan["exercises"],
                 warm_up=day_plan.get("warm_up", ""),
                 cool_down=day_plan.get("cool_down", ""),
+                status=day_plan.get("status") or "Pending",
                 generated_at=datetime.utcnow()
             )
             db.add(db_plan)

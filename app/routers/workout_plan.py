@@ -1,18 +1,26 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Body
+from datetime import datetime
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Body
 from sqlalchemy.orm import Session
-from typing import List
-from app.crud.notification_crud import create_notification
-from app.models.workout_model import WorkoutPlan
-from app.schemas.notification_schema import NotificationCreate
-from app.schemas.session_schema import SessionCreate, SessionOut, SetLogCreate, SetLogOut
+from typing import List, Annotated
+
+from app import schemas
+from app.models.session_model import WorkoutSession
+from app.models.session_model import WorkoutSession
+from ..crud.notification_crud import create_notification
+from ..models.workout_model import WorkoutPlan
+from ..schemas.notification_schema import NotificationCreate
+from ..schemas.session_schema import SessionCreate, SessionOut, SetLogCreate, SetLogOut
+from ..schemas.training_schema import TrainingPlanDay, TrainingPlanResponse
 from ..database import get_db
 from ..authentication.user_auth import get_current_user
 from ..models.user_model import User
 from ..schemas.workout_schema import WorkoutPlanOut, WorkoutGenerateRequest
 from ..services.workout_service import generate_workout_plan_service
 from ..services.recovery_tip_service import generate_recovery_tip
-from ..crud import workout_crud, session_crud, recovery_crud
+from ..crud import workout_crud, session_crud, recovery_crud, notification_crud
 from ..utils import recovery
+from ..config import groq_client
+import logging
 
 
 router = APIRouter(
@@ -20,41 +28,52 @@ router = APIRouter(
     tags=["Workouts"]
 )
 
-
+logger = logging.getLogger(__name__)
 @router.post(
     "/generate",
     status_code=status.HTTP_201_CREATED,
     response_model=List[WorkoutPlanOut]
 )
 def generate_workout_plan(
-    current_user:Session = Depends(get_current_user),
+    request: Annotated[WorkoutGenerateRequest | None, Body(embed=True, description="No body required (empty {} acceptable)")] = None,  # ← name change: request
+    current_user: Session = Depends(get_current_user),
     db: Session = Depends(get_db)
-):
+    
+):  
     """
     - Requires user to be onboarded.
     - Uses Groq API + RAG (Chroma DB with exercises.xlsx).
-    - Body not required (empty {} acceptable).
+    - Body is optional — send {} or nothing.
     """
     try:
         created_plans = generate_workout_plan_service(current_user, db)
+        
+       
+        create_notification(
+            db,
+            NotificationCreate(message="New workout plan generated! Check your plan now."),
+            current_user.id
+        )
+
         return created_plans
 
     except ValueError as ve:
+        logger.warning(f"Validation error for user {current_user.id}: {str(ve)}")
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(ve))
 
     except RuntimeError as re:
+        logger.error(f"Runtime error during plan generation for user {current_user.id}: {str(re)}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(re))
 
     except Exception as e:
+        logger.exception(f"Unexpected error during plan generation for user {current_user.id}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Unexpected error during plan generation: {str(e)}"
         )
     
-    
-    
-    
 
+# get all workouts for current user
 @router.get(
     "/", 
     response_model=List[WorkoutPlanOut],
@@ -69,6 +88,68 @@ def get_workouts(
     if not plans:
         return []
     return plans
+
+
+
+
+@router.get("/plan", response_model=TrainingPlanResponse)
+def get_training_plan(
+    view: Annotated[str, Query(pattern="^(today|weekly)$")] = "today",
+    db: Session = Depends(get_db),
+    current_user: Session = Depends(get_current_user)
+):
+    today = datetime.utcnow().strftime("%A")
+
+    query = db.query(WorkoutPlan).filter(
+        WorkoutPlan.user_id == current_user.id,
+        WorkoutPlan.week == 1
+    )
+
+    if view == "today":
+        query = query.filter(WorkoutPlan.day == today)
+
+    plans = query.order_by(WorkoutPlan.day).all()
+
+    if not plans:
+        return TrainingPlanResponse(
+            view=view,
+            today=today,
+            get_ready_message="No plan for today. Generate one!",
+            plans=[]
+        )
+
+    response_plans = []
+    for plan in plans:
+        status = "Rest"
+        if plan.day == today:
+            status = "Today"
+        elif plan.generated_at.date() < datetime.utcnow().date():
+            status = "Done"
+
+        exercises_list = plan.exercises
+        if exercises_list and isinstance(exercises_list[0], dict):
+            exercises_list = [ex.get("name", "Unknown") for ex in exercises_list]
+
+        response_plans.append(TrainingPlanDay(
+            day=plan.day,
+            muscle_group=plan.muscle_group,
+            duration=plan.duration,
+            exercises=exercises_list,
+            warm_up=plan.warm_up,
+            cool_down=plan.cool_down,
+            status=status,
+            workout_id=plan.id
+        ))
+
+    get_ready = "Get ready with warm-up!" if any(p.status == "Today" for p in response_plans) else "Rest day today"
+
+    return TrainingPlanResponse(
+        view=view,
+        today=today,
+        get_ready_message=get_ready,
+        plans=response_plans
+    )
+
 
 
 
@@ -131,52 +212,51 @@ def complete_session(
     muscle_groups = [m.strip() for m in workout.muscle_group.split(",") if m.strip()]
 
     for muscle in muscle_groups:
-        status, base_tip = recovery.calculate_recovery(session.end_time)  
+        recovery_status, base_tip = recovery_crud.calculate_recovery(session.end_time)  # ← recovery_status নাম change
 
-        llm_tips = generate_recovery_tip(
-            muscle_group=muscle,
-            intensity="intense",
-            max_words=50
-        )
-        
-        recovery_crud.update_recovery(
-            db, current_user.id, muscle, status, llm_tips
-        )
-        
-    create_notification(
+        try:
+            prompt = f"Give a short recovery tip for {muscle} muscle group after intense workout. Max 50 words. Make it actionable."
+            response = groq_client.chat.completions.create(
+                model="llama-3.1-8b-instant",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.6,
+                max_tokens=100
+            )
+            llm_tip = response.choices[0].message.content.strip()
+        except Exception:
+            llm_tip = base_tip
+        recovery_crud.update_recovery(db, current_user.id, muscle, recovery_status, llm_tip)
+    notification_crud.create_notification(
         db,
         NotificationCreate(
-            message="Great job! Workout session completed. Check your recovery status and plan your next session."
+            message="Great job! Session completed. Check your recovery status and plan your next workout."
         ),
         current_user.id
     )
 
     return session
-        
-
 
 @router.post(
     "/sessions/{session_id}/logs",
     response_model=SetLogOut,
     status_code=status.HTTP_201_CREATED,
-    summary="Log a set in active session",
-    description="Records reps/weight for an exercise set. Session must be active and belong to user."
+
 )
 def log_set(
     session_id: int,
     log: SetLogCreate,
     db: Session = Depends(get_db),
-    current_user:Session = Depends(get_current_user)
+    current_user:Session = Depends(get_current_user)  
 ):
-    session = db.query(Session).filter(
-        Session.id == session_id,
-        Session.user_id == current_user.id,
-        Session.completed == False
+    session = db.query(WorkoutSession).filter(  
+        WorkoutSession.id == session_id,
+        WorkoutSession.user_id == current_user.id,
+        WorkoutSession.completed == False
     ).first()
 
     if not session:
         raise HTTPException(
-            status_code=400,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail="Session not found, not yours, or already completed."
         )
 

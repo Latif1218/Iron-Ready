@@ -1,9 +1,10 @@
 WORKOUT_GENERATION_PROMPT = """
 You are an elite combat & football strength coach. Generate a realistic 7-day workout plan using ONLY the relevant exercises provided below. Follow their exact format and detail level.
+
 Relevant Exercises from Database:
 {context}
 
-User profile:
+User Profile:
 - Age: {age}
 - Gender: {gender}
 - Height: {height_cm} cm
@@ -26,29 +27,30 @@ Rules (strictly follow):
     {{
       "day": "Monday",
       "muscle_group": "Chest & Triceps",
-      "duration_minutes": 45,
+      "duration": 60,
       "exercises": [
         {{
-          "name": "Squats",
+          "name": "Flat Barbell Bench Press",
           "sport_category": "both",
-          "movement_pattern": "squat",
-          "primary_muscles": "{{quads}}",
-          "secondary_muscles": "{{glutes,hamstrings}}",
+          "movement_pattern": "press",
+          "primary_muscles": "{{chest}}",
+          "secondary_muscles": "{{front_delts,triceps}}",
           "cns_load": "medium",
           "skill_level": "medium",
-          "injury_risk": "low",
-          "equipment": "{{barbell}}",
-          "description": "deep squat for leg power and drive"
-        }},
-        ...
+          "injury_risk": "medium",
+          "equipment": "{{barbell,bench}}",
+          "description": "press motion for upper body strength and explosive power"
+        }}
       ],
-      "status": "Pending"
       "warm_up": "5 min arm circles + light cardio",
-      "cool_down": "Chest stretches + foam rolling"
-    }},
-    ...
+      "cool_down": "Chest stretches + foam rolling",
+      "status": "Pending"
+    }}
   ]
 }}
+Rules (must follow):
+- EVERY day object MUST have "status" field: "Today", "Done", "Pending", or "Rest"
+- Do NOT omit "status" — it is required.
 
 Be conservative with weights for beginners/intermediates. If data missing, assume moderate level but prioritize safety.
 """

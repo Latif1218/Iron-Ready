@@ -1,11 +1,13 @@
 from sqlalchemy.orm import Session
 from datetime import datetime
-from ..models.session_model import Session, SetLog
+from typing import Optional
+
+from ..models.session_model import WorkoutSession, SetLog 
 from ..schemas.session_schema import SessionCreate, SetLogCreate
 
 
-def create_session(db: Session, session_create: SessionCreate, user_id: int) -> Session:
-    db_session = Session(
+def create_session(db: Session, session_create: SessionCreate, user_id: int) -> WorkoutSession:
+    db_session = WorkoutSession(
         user_id=user_id,
         workout_id=session_create.workout_id,
         start_time=datetime.utcnow(),
@@ -17,8 +19,8 @@ def create_session(db: Session, session_create: SessionCreate, user_id: int) -> 
     return db_session
 
 
-def update_session_end(db: Session, session_id: int) -> Session | None:
-    session = db.query(Session).filter(Session.id == session_id).first()
+def update_session_end(db: Session, session_id: int) -> Optional[WorkoutSession]:
+    session = db.query(WorkoutSession).filter(WorkoutSession.id == session_id).first()
     if not session or session.completed:
         return None
 

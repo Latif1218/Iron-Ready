@@ -4,7 +4,7 @@ from ..database import Base
 from datetime import datetime
 
 
-class Session(Base):
+class WorkoutSession(Base):
     __tablename__ = "sessions"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -18,7 +18,6 @@ class Session(Base):
     workout = relationship("WorkoutPlan", back_populates="sessions")
     set_logs = relationship("SetLog", back_populates="session", cascade="all, delete-orphan")
 
-
 class SetLog(Base):
     __tablename__ = "set_logs"
 
@@ -30,4 +29,4 @@ class SetLog(Base):
     weight_used = Column(Float, nullable=True) 
     notes = Column(String, nullable=True)
 
-    session = relationship("Session", back_populates="set_logs")
+    session = relationship("WorkoutSession", back_populates="set_logs")
