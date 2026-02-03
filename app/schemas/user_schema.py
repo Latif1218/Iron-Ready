@@ -51,19 +51,3 @@ class TokenData(BaseModel):
     id : Optional[int] = None
     
     
-class OnboardingData(BaseModel):
-    birth_date: date                 
-    gender: str = Field(..., pattern="^(male|female|other|prefer_not_to_say)$")
-    height: float = Field(..., gt=100, lt=250)   
-    weight: float = Field(..., gt=30, lt=200)   
-    sport: str
-    strength_levels: Dict[str, float]       
-    training_days: List[str]                    
-
-    class Config:
-        extra = "forbid"
-    
-    
-
-class UserUpdate(UserBase):
-    pass

@@ -11,16 +11,31 @@ class WorkoutGenerateRequest(BaseModel):
     """
     pass  
 
+class ExerciseDetail(BaseModel):
+    name: str
+    sport_category: Optional[str] = None
+    movement_pattern: Optional[str] = None
+    primary_muscles: Optional[str] = None
+    secondary_muscles: Optional[str] = None
+    cns_load: Optional[str] = None
+    skill_level: Optional[str] = None
+    injury_risk: Optional[str] = None
+    equipment: Optional[str] = None
+    description: Optional[str] = None
+
+
 class WorkoutPlanOut(BaseModel):
     id: int
     user_id: int
     week: int
     day: str
+    plan_datetime: datetime
     muscle_group: str
     duration: int
-    exercises: List[Dict]
-    warm_up: Optional[str]
-    cool_down: Optional[str]
+    exercises: List[ExerciseDetail]  
+    warm_up: Optional[str] = None
+    cool_down: Optional[str] = None
+    status: str
     generated_at: datetime
 
     class Config:

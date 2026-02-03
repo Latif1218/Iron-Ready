@@ -10,6 +10,7 @@ class WorkoutPlan(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     week = Column(Integer, default=1)
     day = Column(String, nullable=False)
+    plan_datetime = Column(DateTime, nullable=False)
     muscle_group = Column(String, nullable=False)
     duration = Column(Integer, nullable=False)  
     exercises = Column(JSON, nullable=False)    

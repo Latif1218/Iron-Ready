@@ -1,11 +1,13 @@
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from ..schemas import user_schema
+from ..utils.age_cal import calculate_age
 from ..database import get_db
-from ..authentication import user_auth
-from ..utils import age_cal
-from datetime import datetime
-
+from ..authentication.user_auth import get_current_user
+from ..models.user_model import User
+from ..models.onboarding_model import Onboarding
+from ..schemas.onboarding_schema import SportCategorySelect, SportSubCategorySelect, PersonalInfo, OnboardingCompleteData
+from ..crud.onboarding_crud import get_or_create_onboarding
 
 
 router = APIRouter(
@@ -14,35 +16,81 @@ router = APIRouter(
 )
 
 
-@router.patch("/onboarding", status_code=status.HTTP_200_OK, response_model=user_schema.UserRespons)
-def complete_onboarding(
-    data: user_schema.OnboardingData,
-    current_user: Session = Depends(user_auth.get_current_user),
-    db: Session = Depends(get_db)
+@router.patch("/sport-category", status_code=status.HTTP_200_OK)
+def select_sport_category(
+    data: SportCategorySelect,
+    db: Session = Depends(get_db),
+    current_user: Session = Depends(get_current_user)
 ):
-    if current_user.is_onboarded:
+    onboarding = get_or_create_onboarding(db, current_user.id)
+    onboarding.sport_category = data.sport_category
+    onboarding.sport_sub_category = None  
+
+    db.commit()
+    db.refresh(onboarding)
+
+    return {
+        "message": "Sport category selected",
+        "next_step": "sub_category" if data.sport_category == "Combat" else "personal_info"
+    }
+    
+
+@router.patch("/sport-sub-category", status_code=status.HTTP_200_OK)
+def select_sport_sub_category(
+    data: SportSubCategorySelect,
+    db: Session = Depends(get_db),
+    current_user:Session = Depends(get_current_user)
+):
+    onboarding = get_or_create_onboarding(db, current_user.id)
+    if onboarding.sport_category != "Combat":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User has already completed onboarding."
+            detail="Sport sub-category selection is only applicable for 'Combat"
         )
-    calculated_age = age_cal.calculate_age(data.birth_date)
-    
-    update_data = data.dict(exclude_unset=True)
-    update_data["age"] = calculated_age
-    update_data["is_onboarded"] = True
-    update_data["onboarding_completed_at"] = datetime.utcnow()
-    
-    
-    update_user = user_auth.update_user(
-        db, 
-        current_user.id, 
-        update_data
-    )
-    
-    if not update_user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found."
-        )
-    
-    return update_user
+
+    onboarding.sport_sub_category = data.sport_sub_category
+
+    db.commit()
+    db.refresh(onboarding)
+
+    return {"message": "Sub-category selected"}
+
+
+@router.patch("/personal-info", status_code=status.HTTP_200_OK)
+def update_personal_info(
+    data: PersonalInfo,
+    db: Session = Depends(get_db),
+    current_user: Session = Depends(get_current_user)
+):
+    onboarding = get_or_create_onboarding(db, current_user.id)
+
+    onboarding.birth_date = data.birth_date
+    onboarding.gender = data.gender
+    onboarding.height_cm = data.height_cm
+    onboarding.weight_kg = data.weight_kg
+    onboarding.age = calculate_age(data.birth_date)
+
+    db.commit()
+    db.refresh(onboarding)
+
+    return {"message": "Personal info updated"}
+
+
+
+@router.patch("/complete", status_code=status.HTTP_200_OK)
+def complete_onboarding(
+    data: OnboardingCompleteData,
+    db: Session = Depends(get_db),
+    current_user: Session = Depends(get_current_user)
+):
+    onboarding = get_or_create_onboarding(db, current_user.id)
+
+    onboarding.strength_levels = data.strength_levels
+    onboarding.training_days = data.training_days
+    onboarding.is_onboarded = True
+    onboarding.completed_at = datetime.utcnow()
+
+    db.commit()
+    db.refresh(onboarding)
+
+    return {"message": "Onboarding completed successfully"}

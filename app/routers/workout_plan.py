@@ -29,26 +29,32 @@ router = APIRouter(
 )
 
 logger = logging.getLogger(__name__)
+
 @router.post(
     "/generate",
     status_code=status.HTTP_201_CREATED,
     response_model=List[WorkoutPlanOut]
 )
 def generate_workout_plan(
-    request: Annotated[WorkoutGenerateRequest | None, Body(embed=True, description="No body required (empty {} acceptable)")] = None,  # ← name change: request
+    request: Annotated[WorkoutGenerateRequest | None, Body(embed=True, description="No body required (empty {} acceptable)")] = None,
     current_user: Session = Depends(get_current_user),
     db: Session = Depends(get_db)
-    
 ):  
     """
     - Requires user to be onboarded.
     - Uses Groq API + RAG (Chroma DB with exercises.xlsx).
     - Body is optional — send {} or nothing.
     """
+   
+    if not current_user.onboarding or not current_user.onboarding.is_onboarded:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User must complete onboarding first."
+        )
+
     try:
         created_plans = generate_workout_plan_service(current_user, db)
         
-       
         create_notification(
             db,
             NotificationCreate(message="New workout plan generated! Check your plan now."),
@@ -81,7 +87,7 @@ def generate_workout_plan(
 )
 def get_workouts(
     db: Session = Depends(get_db),
-    current_user:Session = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     plans = workout_crud.get_workout_plans(db, current_user.id)
     
@@ -246,7 +252,7 @@ def log_set(
     session_id: int,
     log: SetLogCreate,
     db: Session = Depends(get_db),
-    current_user:Session = Depends(get_current_user)  
+    current_user: User = Depends(get_current_user)
 ):
     session = db.query(WorkoutSession).filter(  
         WorkoutSession.id == session_id,
