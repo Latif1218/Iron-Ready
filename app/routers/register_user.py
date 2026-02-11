@@ -4,6 +4,7 @@ from ..schemas import user_schema
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..utils import hashing
+from typing import Annotated
 
 
 
@@ -14,7 +15,10 @@ router = APIRouter(
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=user_schema.UserRespons)
-def create_user(user: user_schema.UserCreate, db: Session = Depends(get_db)):
+def create_user(
+    user: user_schema.UserCreate,
+    db: Annotated[Session, Depends(get_db)]
+):
     if db.query(user_model.User).filter(user_model.User.email == user.email).first():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

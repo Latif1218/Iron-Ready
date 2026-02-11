@@ -3,8 +3,7 @@ from .database import Base, engine
 from .routers import register_user, user, onboarding, subscription, workout_plan, recoveries, notificatiions
 from fastapi import Request
 import stripe
-from .config import *
-
+from .config import STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
 
 Base.metadata.create_all(bind=engine)
 

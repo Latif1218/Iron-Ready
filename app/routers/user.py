@@ -6,6 +6,7 @@ from typing import Annotated
 from fastapi.security import OAuth2PasswordRequestForm
 from ..authentication import user_auth
 from datetime import timedelta
+from ..models.user_model import User
 
 
 
@@ -18,7 +19,7 @@ router = APIRouter(
 @router.post("/token", status_code=status.HTTP_200_OK, response_model=user_schema.UserToken)
 def login_user_access_token(
     user_credentials : Annotated[OAuth2PasswordRequestForm, Depends()],
-    db: Session = Depends(get_db)
+    db: Annotated[Session, Depends(get_db)]
 ):
     user = user_auth.authenticate_user(db, user_credentials.username, user_credentials.password)
     if not user:
@@ -41,7 +42,7 @@ def login_user_access_token(
 
 
 @router.get("/", status_code=status.HTTP_200_OK)
-def user_schemas(user: Session = Depends(user_auth.get_current_user)):
+def user_schemas(user: Annotated[User, Depends(user_auth.get_current_user)]):
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

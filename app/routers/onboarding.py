@@ -3,9 +3,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from ..utils.age_cal import calculate_age
 from ..database import get_db
+from typing import Annotated
 from ..authentication.user_auth import get_current_user
 from ..models.user_model import User
-from ..models.onboarding_model import Onboarding
 from ..schemas.onboarding_schema import SportCategorySelect, SportSubCategorySelect, PersonalInfo, OnboardingCompleteData
 from ..crud.onboarding_crud import get_or_create_onboarding
 
@@ -19,8 +19,8 @@ router = APIRouter(
 @router.patch("/sport-category", status_code=status.HTTP_200_OK)
 def select_sport_category(
     data: SportCategorySelect,
-    db: Session = Depends(get_db),
-    current_user: Session = Depends(get_current_user)
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)]
 ):
     onboarding = get_or_create_onboarding(db, current_user.id)
     onboarding.sport_category = data.sport_category
@@ -38,8 +38,8 @@ def select_sport_category(
 @router.patch("/sport-sub-category", status_code=status.HTTP_200_OK)
 def select_sport_sub_category(
     data: SportSubCategorySelect,
-    db: Session = Depends(get_db),
-    current_user:Session = Depends(get_current_user)
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)]
 ):
     onboarding = get_or_create_onboarding(db, current_user.id)
     if onboarding.sport_category != "Combat":
@@ -59,8 +59,8 @@ def select_sport_sub_category(
 @router.patch("/personal-info", status_code=status.HTTP_200_OK)
 def update_personal_info(
     data: PersonalInfo,
-    db: Session = Depends(get_db),
-    current_user: Session = Depends(get_current_user)
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)]
 ):
     onboarding = get_or_create_onboarding(db, current_user.id)
 
@@ -80,8 +80,8 @@ def update_personal_info(
 @router.patch("/complete", status_code=status.HTTP_200_OK)
 def complete_onboarding(
     data: OnboardingCompleteData,
-    db: Session = Depends(get_db),
-    current_user: Session = Depends(get_current_user)
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)]
 ):
     onboarding = get_or_create_onboarding(db, current_user.id)
 
