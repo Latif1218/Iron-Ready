@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, Float, Date, JSON, TIMESTAMP, text, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, TIMESTAMP, text, DateTime
 from sqlalchemy.orm import relationship
 from ..database import Base
 from cuid2 import Cuid
