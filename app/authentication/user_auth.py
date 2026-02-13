@@ -44,34 +44,40 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 
 
 def get_current_user(
+    db: Annotated[Session, Depends(get_db)],
     token: str = Depends(oauth2_schema),
-    db: Session = Depends(get_db)                 
-):
+) -> user_model.User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
-        headers = {"www-Authenticate": "Bearer"}
+        headers={"WWW-Authenticate": "Bearer"},
     )
+
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("user_id")
+        user_id: str | None = payload.get("user_id")
         
         if user_id is None:
-            raise credentials_exception
+            raise credentials_exception from None
+
         token_data = user_schema.TokenData(id=user_id)
-    except ExpiredSignatureError:
+
+    except ExpiredSignatureError as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token expired. Please login again.",
-            headers={"WWW-Authenticate": "Bearer"}
-        )
-    except PyJWTError:
-        raise credentials_exception
-    
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from e
+
+    except PyJWTError as e:
+        raise credentials_exception from e
+
     user = db.query(user_model.User).filter(user_model.User.id == token_data.id).first()
     if user is None:
-        raise credentials_exception
+        raise credentials_exception from None
+
     return user
+
 
 
 def get_current_active_user(
