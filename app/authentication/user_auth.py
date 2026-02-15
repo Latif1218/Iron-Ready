@@ -107,3 +107,18 @@ def update_user(db: Session, user_id: int, update_data: dict):
     db.refresh(user)
     return user
         
+
+def get_current_admin_user(
+        current_user: Annotated[user_model.User, Depends(get_current_user)]
+) -> user_model.User:
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin privileges required"
+        )
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permission to access all user"
+        )
+    return current_user

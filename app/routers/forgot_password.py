@@ -8,6 +8,7 @@ from ..models import user_model, forgot_model
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
 from ..utils import otp_and_mail, hashing
+from ..authentication.user_auth import get_current_user
 
 router = APIRouter(
     prefix="/forgot",
@@ -167,3 +168,26 @@ def update_password_without_token(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update password"
         )
+    
+
+@router.put("update_password", status_code=status.HTTP_200_OK)
+def update_password(
+    payload: forgot_schema.PasswordUpdate,
+    user: Annotated[user_model.User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)]
+):
+    user = db.query(user_model.User).filter(
+        user_model.User.id == user.id
+    ).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="This user does not exist"
+        )
+    db.commit()
+
+    return {
+        "status": "Success",
+        "message": "Password updated successfully"
+    }

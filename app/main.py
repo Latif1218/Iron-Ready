@@ -1,6 +1,6 @@
 from fastapi import FastAPI, status, HTTPException
 from .database import Base, engine
-from .routers import register_user, user, forgot_password, onboarding, subscription, workout_plan, recoveries, notificatiions
+from .routers import register_user, user, forgot_password, admin_dashboard, onboarding, subscription, workout_plan, recoveries, notificatiions
 from fastapi import Request
 import stripe
 from .config import STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
@@ -46,3 +46,4 @@ app.include_router(subscription.router)
 app.include_router(workout_plan.router)
 app.include_router(recoveries.router)
 app.include_router(notificatiions.router)
+app.include_router(admin_dashboard.router)

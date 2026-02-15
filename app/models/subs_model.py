@@ -30,3 +30,4 @@ class Subscription(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     user = relationship("User", back_populates="subscription")
+    transactions = relationship("Transaction", back_populates="subscription")

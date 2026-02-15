@@ -25,3 +25,5 @@ class User(Base):
     recoveries = relationship("Recovery", back_populates="user")
     notifications = relationship("Notification", back_populates="user", order_by="Notification.created_at.desc()")
     reset_code = relationship("PasswordResetCode", back_populates="user")
+    transactions = relationship("Transaction", back_populates="user", foreign_keys="Transaction.user_id")
+    activities = relationship("ActivityLog", back_populates="user", order_by="ActivityLog.created_at.desc()", lazy="dynamic")
