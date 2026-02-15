@@ -24,3 +24,4 @@ class User(Base):
     sessions = relationship("WorkoutSession", back_populates="user")
     recoveries = relationship("Recovery", back_populates="user")
     notifications = relationship("Notification", back_populates="user", order_by="Notification.created_at.desc()")
+    reset_code = relationship("PasswordResetCode", back_populates="user")
