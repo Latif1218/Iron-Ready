@@ -28,6 +28,7 @@ class Subscription(Base):
     cancel_at_period_end = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    plan_type = Column(String, nullable=True)
 
     user = relationship("User", back_populates="subscription")
     transactions = relationship("Transaction", back_populates="subscription")

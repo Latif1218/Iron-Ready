@@ -51,3 +51,6 @@ class OnboardingCompleteData(BaseModel):
         if not all(day in valid_days for day in v):
             raise ValueError("Invalid training days")
         return v
+    
+
+

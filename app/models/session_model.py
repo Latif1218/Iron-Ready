@@ -13,6 +13,7 @@ class WorkoutSession(Base):
     start_time = Column(DateTime, default=datetime.utcnow, nullable=False)
     end_time = Column(DateTime, nullable=True)
     completed = Column(Boolean, default=False, nullable=False)
+    notes = Column(String, nullable=True)
 
     user = relationship("User", back_populates="sessions")
     workout = relationship("WorkoutPlan", back_populates="sessions")

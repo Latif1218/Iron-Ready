@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from ..database import Base
 from datetime import datetime
@@ -13,5 +13,6 @@ class Recovery(Base):
     status = Column(String, nullable=False)  # "red", "yellow", "green"
     tip = Column(String, nullable=True)
     last_updated = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    admin_edited = Column(Boolean, default=False)
 
     user = relationship("User", back_populates="recoveries")

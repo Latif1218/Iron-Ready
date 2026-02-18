@@ -20,5 +20,5 @@ class Onboarding(Base):
     training_days = Column(JSON, nullable=True)          
     is_onboarded = Column(Boolean, default=False, nullable=False)
     completed_at = Column(DateTime(timezone=True), nullable=True)
-
+    
     user = relationship("User", back_populates="onboarding")

@@ -267,3 +267,27 @@ def log_set(
         )
 
     return session_crud.create_set_log(db, log, session_id)
+
+
+
+
+@router.get("/body_diagram", response_model=)
+def get_body_diagram(
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)]
+):
+    recoveries = recovery_crud.get_user_recoveries(db, current_user.id)
+    front = {}
+    back = {}
+    tips = {}
+
+    # Assume mapping: e.g., Chest -> front, Back -> back (hardcode or from MuscleGroup)
+    for rec in recoveries:
+        # Example mapping
+        if rec.muscle_group in ["Chest", "Quads", "Abs"]:
+            front[rec.muscle_group] = rec.status
+        else:
+            back[rec.muscle_group] = rec.status
+        tips[rec.muscle_group] = rec.tip
+
+    return BodyDiagramResponse(front=front, back=back, tips=tips)
