@@ -8,6 +8,7 @@ class RecoveryOut(BaseModel):
     status: str
     tip: str | None
     last_updated: datetime
+    admin_edited: bool
 
     class Config:
         from_attributes = True

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func, select, or_
 from typing import Annotated, List
@@ -6,6 +6,7 @@ from ..database import get_db
 from ..models import user_model, subs_model, transaction_model, activity_log
 from ..schemas.admin_schema import DashboardStats, RecentActivityItem, UserListItem, UserPage, SubscriptionInfo, OnboardingInfo
 from ..authentication.user_auth import get_current_admin_user
+from ..schemas.user_schema import UserBase
 from datetime import datetime, timedelta
 from fastapi_pagination import Params
 from fastapi_pagination.ext.sqlalchemy import paginate
@@ -167,3 +168,46 @@ def list_users(
         size=page.size,
         pages=page.pages
     )
+
+
+@router.put("/users/{user_id}", status_code=status.HTTP_200_OK)
+def edit_user(
+    user_id: int,
+    data: UserBase,
+    db: Annotated[Session, Depends(get_db)],
+    current_admin: Annotated[user_model.User, Depends(get_current_admin_user)]
+):
+    user = db.query(user_model.User).filter(user_model.User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    user.name = data.name
+    user.email = data.email
+    user.avatar_url = data.avatar_url
+    db.commit()
+    return {
+        "message": "User updated"
+    }
+
+
+@router.put("/users/{user_id}/ban", status_code=status.HTTP_200_OK)
+def ban_user(
+    user_id: int,
+    db: Annotated[Session, Depends(get_db)],
+    current_admin: Annotated[user_model.User, Depends(get_current_admin_user)]
+):
+    user = db.query(user_model.User).filter(
+        user_model.User.id == user_id
+    ).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    user.is_active = False
+    db.commit()
+    return {
+        "message": "User banned" 
+    }

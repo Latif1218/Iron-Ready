@@ -6,9 +6,10 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from ..schemas.subs_schema import CreateSubscriptionRequest, SubscriptionResponse
+from ..models.transaction_model import Transaction, TransactionStatus, TransactionType
 from ..database import get_db
 from ..models.user_model import User
-from ..authentication.user_auth import get_current_user
+from ..authentication.user_auth import get_current_user, get_current_admin_user
 from ..models.subs_model import Subscription, SubscriptionStatus
 from ..config import (
     DOMAIN,
@@ -26,9 +27,7 @@ stripe.api_version = "2024-06-20"  # keep updated
 
 logger = logging.getLogger(__name__)
 
-# -------------------------------------------------------------------------
-# Config for frontend
-# -------------------------------------------------------------------------
+
 @router.get("/config")
 async def get_config():
     return {
@@ -38,9 +37,6 @@ async def get_config():
     }
 
 
-# -------------------------------------------------------------------------
-# Create checkout session + save pending subscription
-# -------------------------------------------------------------------------
 @router.post("/checkout")
 def create_subscription(
     plan_type: CreateSubscriptionRequest,
@@ -86,6 +82,7 @@ def create_subscription(
             cancel_at_period_end=False,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
+            plan_type=plan_type
         )
 
         db.add(subscription)
@@ -111,9 +108,7 @@ def create_subscription(
             detail="An unexpected error occurred"
         ) from None
 
-# -------------------------------------------------------------------------
-# Retrieve session (for success page, optional)
-# -------------------------------------------------------------------------
+
 @router.get("/checkout-session")
 async def get_checkout_session(sessionId: str):
     try:
@@ -131,9 +126,8 @@ async def get_checkout_session(sessionId: str):
             detail=f"Payment error: {e.user_message or str(e)}"
         ) from e
 
-# -------------------------------------------------------------------------
-# Customer Portal
-# -------------------------------------------------------------------------
+
+
 @router.post("/customer-portal")
 async def customer_portal(
     current_user: Annotated[User, Depends(get_current_user)],
@@ -156,9 +150,6 @@ async def customer_portal(
         ) from e
 
 
-# -------------------------------------------------------------------------
-# Webhook – most important part
-# -------------------------------------------------------------------------
 @router.post("/webhook")
 async def stripe_webhook(request: Request, db: Annotated[Session, Depends(get_db)]):
     payload = await request.body()
@@ -187,7 +178,7 @@ async def stripe_webhook(request: Request, db: Annotated[Session, Depends(get_db
             status_code=500,
             detail="An unexpected error occurred"
         ) from None
-    # Handle relevant events
+   
     if event.type == "checkout.session.completed":
         session = event.data.object
         if session.mode != "subscription":
@@ -200,7 +191,7 @@ async def stripe_webhook(request: Request, db: Annotated[Session, Depends(get_db
             logger.warning("No user_id in metadata")
             return {"status": "missing metadata"}
 
-        # Retrieve fresh subscription object (periods are reliable here)
+     
         try:
             stripe_sub = stripe.Subscription.retrieve(sub_id)
         except stripe.error.StripeError:
@@ -211,7 +202,7 @@ async def stripe_webhook(request: Request, db: Annotated[Session, Depends(get_db
         ).first()
 
         if not sub:
-            # Edge case: record might not exist → create it
+        
             sub = Subscription(
                 user_id=int(user_id),
                 stripe_customer_id=session.customer,
@@ -232,7 +223,7 @@ async def stripe_webhook(request: Request, db: Annotated[Session, Depends(get_db
             logger.info(f"Subscription activated: {sub_id} | user: {user_id}")
 
     elif event.type in ("invoice.paid", "invoice.payment_failed", "customer.subscription.updated", "customer.subscription.deleted"):
-        # You should handle these too in production
+        
         obj = event.data.object
         sub_id = obj.id if event.type.startswith("customer.subscription") else obj.subscription
 
@@ -303,3 +294,32 @@ def cancel_subscription(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error occurred while canceling"
         ) from None
+    
+
+
+
+@router.post("/withdraw",status_code=status.HTTP_200_OK)
+def withdraw_earnings(
+    amount: float,
+    db: Annotated[Session, Depends(get_db)],
+    current_admin: Annotated[User , Depends(get_current_admin_user)]
+):
+    try:
+        payout = stripe.Payout.create(amount=amount * 100, currency="usd")
+        trans = Transaction(
+            user_id=current_admin.id,
+            type=TransactionType.PAYOUT,
+            amount=-amount,
+            status=TransactionStatus.PENDING,
+            stripe_payout_id=payout.id
+        )
+        db.add(trans)
+        db.commit()
+        return {
+            "message": "Payout initiated"
+        }
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Payout failed"
+        )

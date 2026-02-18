@@ -39,7 +39,7 @@ class SubscriptionInfo(BaseModel):
     status: str = Field(..., description="e.g. active, trialing, past_due, canceled")
     current_period_end: Optional[datetime] = Field(None, description="End of current billing period")
     cancel_at_period_end: bool = Field(False, description="Will cancel at end of period?")
-
+    plan_type: str
 
 
 class OnboardingInfo(BaseModel):

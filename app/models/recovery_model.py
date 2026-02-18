@@ -10,7 +10,7 @@ class Recovery(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     muscle_group = Column(String, nullable=False, index=True)
-    status = Column(String, nullable=False)  # "red", "yellow", "green"
+    status = Column(String, nullable=False) 
     tip = Column(String, nullable=True)
     last_updated = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     admin_edited = Column(Boolean, default=False)

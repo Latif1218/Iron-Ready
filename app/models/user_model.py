@@ -13,8 +13,9 @@ class User(Base):
     name = Column(String, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     password = Column(String, nullable=False)
+    avatar_url = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
-    role = Column(String, default="user") # user, admin, superadmin
+    role = Column(String, default="user")
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     updated_at = Column(DateTime(timezone=True), nullable=True, onupdate=datetime.utcnow)
     

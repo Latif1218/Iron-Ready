@@ -2,8 +2,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Body
 from sqlalchemy.orm import Session
 from typing import List, Annotated
-
-from app import schemas
+from ..schemas.body_diagram_schema import BodyDiagramResponse
 from app.models.session_model import WorkoutSession
 from app.models.session_model import WorkoutSession
 from ..crud.notification_crud import create_notification
@@ -271,7 +270,7 @@ def log_set(
 
 
 
-@router.get("/body_diagram", response_model=)
+@router.get("/body_diagram", response_model=BodyDiagramResponse)
 def get_body_diagram(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)]

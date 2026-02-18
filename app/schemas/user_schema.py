@@ -13,6 +13,7 @@ class UserBase(BaseModel):
     sport: Optional[str]
     strength_levels: Optional[Dict]
     training_days: Optional[List[str]]
+    avatar_url: Optional[str]
     
     
 class UserCreate(BaseModel):

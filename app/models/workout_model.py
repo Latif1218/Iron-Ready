@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, JSON, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, JSON, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from ..database import Base
 from datetime import datetime
@@ -18,6 +18,7 @@ class WorkoutPlan(Base):
     warm_up = Column(String, nullable=True)
     cool_down = Column(String, nullable=True)
     generated_at = Column(DateTime, default=datetime.utcnow)
+    admin_edited = Column(Boolean, default=False)
 
     user = relationship("User", back_populates="workout_plans")
     sessions = relationship("WorkoutSession", back_populates="workout")

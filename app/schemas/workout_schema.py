@@ -22,6 +22,7 @@ class ExerciseDetail(BaseModel):
     injury_risk: Optional[str] = None
     equipment: Optional[str] = None
     description: Optional[str] = None
+    image_url: Optional[str] = None
 
 
 class WorkoutPlanOut(BaseModel):
@@ -37,6 +38,7 @@ class WorkoutPlanOut(BaseModel):
     cool_down: Optional[str] = None
     status: str
     generated_at: datetime
+    admin_edited: bool
 
     class Config:
         from_attributes = True
