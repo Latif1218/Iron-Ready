@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Annotated
 from ..database import get_db
 from ..models.exercise_model import Exercise
-from ..models.sport_model import Sport, SportExercise
+from ..models.sport_model import Sport, sport_exercises
 from ..schemas.sport_schema import SportCreate, SportOut
 from ..authentication.user_auth import get_current_admin_user
 from ..models.user_model import User
@@ -14,7 +14,12 @@ router = APIRouter(
     tags=["Sports"]
 )
 
-@router.post("/", response_model=SportOut, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    response_model=SportOut,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create new sport and assign exercises (Admin only)"
+)
 def create_sport(
     sport: SportCreate,
     db: Annotated[Session, Depends(get_db)],
@@ -34,19 +39,26 @@ def create_sport(
     db.add(new_sport)
     db.flush()  
 
-    if len(sport.exercise_ids) > 10:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Maximum 10 exercises allowed per sport"
-        )
-
-    for ex_id in sport.exercise_ids:
-        if not db.query(Exercise).filter(Exercise.id == ex_id).first():
+    if sport.exercise_ids:
+        if len(sport.exercise_ids) > 10:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Exercise with ID {ex_id} not found"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Maximum 10 exercises allowed per sport"
             )
-        db.add(SportExercise(sport_id=new_sport.id, exercise_id=ex_id))
+
+        for ex_id in sport.exercise_ids:
+            if not db.query(Exercise).filter(Exercise.id == ex_id).first():
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Exercise with ID {ex_id} not found"
+                )
+
+            db.execute(
+                sport_exercises.insert().values(
+                    sport_id=new_sport.id,
+                    exercise_id=ex_id
+                )
+            )
 
     db.commit()
     db.refresh(new_sport)

@@ -3,20 +3,24 @@ from sqlalchemy.orm import relationship
 from ..database import Base
 from enum import Enum as PyEnum
 
+
 class CNSEnum(PyEnum):
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
+
 
 class SkillEnum(PyEnum):
     BEGINNER = "beginner"
     INTERMEDIATE = "intermediate"
     ADVANCED = "advanced"
 
+
 class InjuryRiskEnum(PyEnum):
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
+
 
 class Exercise(Base):
     __tablename__ = "exercises"
@@ -35,5 +39,16 @@ class Exercise(Base):
     description = Column(Text, nullable=True)
     image_url = Column(String, nullable=True)
 
-    sports = relationship("SportExercise", back_populates="exercise")
-    recoveries = relationship("ExerciseRecovery", back_populates="exercise")
+    # Many-to-many relationship with Sport
+    sports = relationship(
+    "Sport",
+    secondary="sport_exercises",
+    back_populates="exercises"
+)
+
+    # One-to-many with ExerciseRecovery
+    recoveries = relationship(
+        "ExerciseRecovery",
+        back_populates="exercise",
+        cascade="all, delete-orphan"        # recovery delete হলে exercise থেকেও যাবে
+    )
